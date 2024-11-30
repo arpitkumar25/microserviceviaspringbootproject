@@ -1,13 +1,13 @@
-package com.microservice.user.service.Userservice;
+package com.microservice.apigateway2.APIGatewayv2;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class UserserviceApplication {
+public class ApiGatewayv2Application {
 
 	public static void main(String[] args) {
-			SpringApplication.run(UserserviceApplication.class, args);
+		SpringApplication.run(ApiGatewayv2Application.class, args);
 	}
 
 }

@@ -3,17 +3,15 @@ package com.microservice.user.service.Userservice.services.Impl;
 import com.microservice.user.service.Userservice.entities.Rating;
 import com.microservice.user.service.Userservice.entities.User;
 import com.microservice.user.service.Userservice.exceptions.ResourceNotFoundException;
-import com.microservice.user.service.Userservice.externalservices.RatingService;
 import com.microservice.user.service.Userservice.repositories.UserRepo;
 import com.microservice.user.service.Userservice.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -25,7 +23,7 @@ public class UserServiceImpl implements UserService {
     private RestTemplate restTemplate;
 
     @Autowired
-    private RatingService ratingService;
+    private RatingClient ratingClient;
 
     @Override
     public User saveUser(User user) {
@@ -37,7 +35,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getAllUser() {
-        return userRepo.findAll();
+
+        List<User> users = userRepo.findAll();
+
+        List<User> newUserList = users.stream().map(user -> {
+            user.setRatings(ratingClient.getRatingByUserId(user.getUserId()));
+            return user;
+        }).collect(Collectors.toList());
+
+        return users;
     }
 
     @Override
@@ -45,10 +51,18 @@ public class UserServiceImpl implements UserService {
         User user= userRepo.findById(userid).
                 orElseThrow(() -> new ResourceNotFoundException("User ID Details not found:"+userid));
 
+        System.out.println("For User Id:"+user.getUserId());
+
+        //Using Feign Client
+        user.setRatings(ratingClient.getRatingByUserId(user.getUserId()));
+
+        /* Using RestTemplate
         //Call Rating MicroService to get that User Rating Info
         ArrayList<Rating> ratingsOfUser= restTemplate.getForObject("http://RATINGSERVICE/api/v1/ratingservice/User/"+user.getUserId(), ArrayList.class);
         System.out.println(ratingsOfUser);
         user.setRatings(ratingsOfUser);
+        */
+
         return  user;
     }
 }
